@@ -44,7 +44,7 @@ jobs:
           restore-keys: ${{ matrix.nuitka-cache }}-
 
       - name: Build with Nuitka
-        run: python -m nuitka --standalone --onefile --output-filename=${{ matrix.artifact }} src/main.py
+        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads --output-filename=${{ matrix.artifact }} src/main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
