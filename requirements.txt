@@ -1,0 +1,2 @@
+# This project has no external dependencies.
+# Python 2.6+ is required (standard library only).
