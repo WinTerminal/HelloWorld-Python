@@ -60,6 +60,11 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -73,11 +78,55 @@ jobs:
           cp artifacts/HelloWorld-windows-latest/HelloWorld.exe release/HelloWorld.exe
           chmod +x release/HelloWorld-linux release/HelloWorld-macos
 
+      - name: Generate release body
+        id: body
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | sed -n '2p')
+
+          # --- Download Table ---
+          DOWNLOADS=$(cat <<'EOF'
+          | Platform | File | Arch |
+          |----------|------|------|
+          | Linux | [HelloWorld-linux](../blob/main/release/HelloWorld-linux?raw=true) | x86_64 |
+          | macOS | [HelloWorld-macos](../blob/main/release/HelloWorld-macos?raw=true) | Universal |
+          | Windows | [HelloWorld.exe](../blob/main/release/HelloWorld.exe?raw=true) | x86_64 |
+          EOF
+          )
+
+          # --- Changelog ---
+          if [ -n "$PREV_TAG" ]; then
+            CHANGELOG=$(git log ${PREV_TAG}..${TAG} --pretty=format:"- %s (%h)" --no-merges)
+          else
+            CHANGELOG=$(git log ${TAG} --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # --- Contributors ---
+          CONTRIBUTORS=$(git log ${TAG} --pretty=format:"- %an" --no-merges | sort -u)
+
+          # --- Assemble ---
+          cat <<BODY > release_notes.md
+          ## What's Changed
+
+          ${CHANGELOG}
+
+          ## Download
+
+          ${DOWNLOADS}
+
+          ## Contributors
+
+          ${CONTRIBUTORS}
+          BODY
+
+          # Strip leading spaces from heredoc indentation
+          sed -i 's/^          //' release_notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          body_path: release_notes.md
           files: |
             release/HelloWorld-linux
             release/HelloWorld-macos
             release/HelloWorld.exe
-          generate_release_notes: true
