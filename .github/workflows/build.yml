@@ -75,7 +75,7 @@ jobs:
           mkdir -p release
           cp artifacts/HelloWorld-ubuntu-latest/HelloWorld release/HelloWorld-linux
           cp artifacts/HelloWorld-macos-latest/HelloWorld release/HelloWorld-macos
-          cp artifacts/HelloWorld-windows-latest/HelloWorld.exe release/HelloWorld.exe
+          cp artifacts/HelloWorld.exe-windows-latest/HelloWorld.exe release/HelloWorld.exe
           chmod +x release/HelloWorld-linux release/HelloWorld-macos
 
       - name: Generate release body
